@@ -1,0 +1,6 @@
+@LijanTeck_HostAddress = http://localhost:5186
+
+GET {{LijanTeck_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

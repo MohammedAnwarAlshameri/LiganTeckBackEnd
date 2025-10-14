@@ -1,0 +1,33 @@
+# Build outputs
+bin/
+obj/
+[Bb]uild/
+artifacts/
+
+# User-specific / VS
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# Publish / temp
+publish/
+dist/
+tmp/
+temp/
+
+# Secrets (لا ترفع إعدادات التطوير)
+appsettings.Development.json
+
+secrets.json
+
+# Misc
+*.DS_Store
+Thumbs.db
