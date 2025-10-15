@@ -93,6 +93,7 @@ namespace Infrastructure.DbContexts
                     var cond = Expression.Equal(prop, Expression.Constant(false));
                     var lambda = Expression.Lambda(cond, param);
                     modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
+                    //modelBuilder.Entity<Tenant>().HasQueryFilter(t => !t.IsDeleted);
                 }
             }
         }

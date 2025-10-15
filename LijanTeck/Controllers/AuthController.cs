@@ -20,7 +20,10 @@ namespace LijanTeck.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto req, CancellationToken ct)
-            => Ok(await _auth.LoginAsync(req, ct));
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto req, CancellationToken ct)
+        {
+            try { return Ok(await _auth.LoginAsync(req, ct)); }
+            catch (InvalidOperationException) { return Unauthorized(new { message = "Invalid credentials." }); }
+        }
     }
 }

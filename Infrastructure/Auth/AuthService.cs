@@ -49,15 +49,47 @@ namespace Infrastructure.Auth
 
         public async Task<LoginResponseDto> LoginAsync(LoginRequestDto req, CancellationToken ct = default)
         {
-            var email = req.Email.Trim().ToLowerInvariant();
-            var tenant = await _db.Set<Tenant>().FirstOrDefaultAsync(t => t.TenantEmail == email && !t.IsDeleted, ct)
-                         ?? throw new InvalidOperationException("Invalid credentials.");
+            var email = (req.Email ?? string.Empty).Trim().ToLowerInvariant();
 
-            if (!BCrypt.Net.BCrypt.Verify(req.Password, tenant.TenantPassword))
+            // نقرأ فقط الأعمدة اللازمة لتسجيل الدخول
+            var row = await _db.Set<Tenant>()
+                .AsNoTracking()
+                .Where(t => t.TenantEmail == email && !t.IsDeleted)
+                .Select(t => new
+                {
+                    t.TenantId,
+                    Email = t.TenantEmail,
+                    Name = t.TenantName,
+                    PasswordHash = t.TenantPassword,
+                    Status = t.TenantStatusid
+                })
+                .SingleOrDefaultAsync(ct);
+
+            // إخفاء تفاصيل السبب لأمان أعلى
+            if (row is null || string.IsNullOrEmpty(row.PasswordHash))
                 throw new InvalidOperationException("Invalid credentials.");
 
-            var token = _jwt.CreateToken(tenant.TenantId, tenant.TenantEmail, tenant.TenantName);
-            return new LoginResponseDto { Token = token, TenantId = tenant.TenantId, Email = tenant.TenantEmail, TenantName = tenant.TenantName };
+            // لو عندك حالة للحساب (مثلاً 1 = Active)
+            if (row.Status != 1)
+                throw new InvalidOperationException("Account is inactive.");
+
+            if (!BCrypt.Net.BCrypt.Verify(req.Password ?? string.Empty, row.PasswordHash))
+                throw new InvalidOperationException("Invalid credentials.");
+
+            var token = _jwt.CreateToken(
+                row.TenantId,
+                row.Email ?? string.Empty,
+                row.Name ?? string.Empty
+            );
+
+            return new LoginResponseDto
+            {
+                Token = token,
+                TenantId = row.TenantId,
+                Email = row.Email ?? string.Empty,
+                TenantName = row.Name ?? string.Empty
+            };
         }
+
     }
 }

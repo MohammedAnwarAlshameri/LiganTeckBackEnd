@@ -15,13 +15,14 @@ namespace Infrastructure.EntityConfigurations.Lijan
     {
         public void Configure(EntityTypeBuilder<TenantStatus> entity)
         {
-            entity
-                .HasNoKey()
+            entity 
                 .ToTable("TenantStatus");
 
+            entity.HasKey(e => e.TenantStatusid);
             entity.Property(e => e.TenantStatusName).HasMaxLength(50);
             entity.Property(e => e.TenantStatusdescription).HasMaxLength(200);
             entity.Property(e => e.TenantStatusid).ValueGeneratedOnAdd();
+            
         }
     }
 }

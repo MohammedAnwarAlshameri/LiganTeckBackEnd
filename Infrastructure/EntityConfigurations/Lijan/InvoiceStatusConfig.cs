@@ -15,9 +15,10 @@ namespace Infrastructure.EntityConfigurations.Lijan
         public void Configure(EntityTypeBuilder<InvoiceStatus> entity)
         {
             entity
-                 .HasNoKey()
-                 .ToTable("InvoiceStatus");
+                .HasNoKey()
+                .ToTable("InvoiceStatus");
 
+            //entity.HasKey(e => e.InvoiceStatusid);
             entity.Property(e => e.InvoiceStatusName).HasMaxLength(50);
             entity.Property(e => e.InvoiceStatusdescription).HasMaxLength(200);
             entity.Property(e => e.InvoiceStatusid).ValueGeneratedOnAdd();
