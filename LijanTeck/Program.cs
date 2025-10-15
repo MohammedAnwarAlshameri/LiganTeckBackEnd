@@ -36,29 +36,29 @@ builder.Services.AddSwaggerGen(c =>
           Array.Empty<string>() }
     });
 });
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var seed = builder.Configuration.GetSection("SeedAdmin");
-    var email = seed["Email"];
-    var pass = seed["Password"];
-    var role = seed["RoleName"] ?? "Admin";
-    var name = seed["DisplayName"] ?? "Admin";
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//    var seed = builder.Configuration.GetSection("SeedAdmin");
+//    var email = seed["Email"];
+//    var pass = seed["Password"];
+//    var role = seed["RoleName"] ?? "Admin";
+//    var name = seed["DisplayName"] ?? "Admin";
 
-    if (!string.IsNullOrWhiteSpace(email) && !await db.AdminUser.AnyAsync(u => u.Email == email))
-    {
-        db.AdminUser.Add(new Domain.Lijan.AdminUser
-        {
-            Email = email.ToLowerInvariant(),
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(pass),
-            RoleName = role,
-            DisplayName = name,
-            IsActive = true,
-            CreatedOn = DateTime.UtcNow
-        });
-        await db.SaveChangesAsync();
-    }
-}
+//    if (!string.IsNullOrWhiteSpace(email) && !await db.AdminUser.AnyAsync(u => u.Email == email))
+//    {
+//        db.AdminUser.Add(new Domain.Lijan.AdminUser
+//        {
+//            Email = email.ToLowerInvariant(),
+//            PasswordHash = BCrypt.Net.BCrypt.HashPassword(pass),
+//            RoleName = role,
+//            DisplayName = name,
+//            IsActive = true,
+//            CreatedOn = DateTime.UtcNow
+//        });
+//        await db.SaveChangesAsync();
+//    }
+//}
 
 builder.Services.AddAuthorization(options =>
 {
@@ -120,6 +120,8 @@ builder.Services.AddScoped<IPlanService, PlanService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IVatRateService, VatRateService>();
 builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
+
 
 
 builder.Services.AddHttpContextAccessor(); // ??? ?????? Claims ?? ??????
