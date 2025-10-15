@@ -68,13 +68,13 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddControllers();
-builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpContextAccessor(); // ??? ?????? Claims ?? ??????
 
 // ===== CORS ????????? =====
 builder.Services.AddCors(o =>
 {
     o.AddPolicy("Angular", p => p
-        .WithOrigins("http://localhost:4200")   // ???? ???? ??????? ?? ???????
+        .WithOrigins("http://localhost:4200", "https://localhost:4200")   // ???? ???? ??????? ?? ???????
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials());
@@ -83,7 +83,7 @@ builder.Services.AddCors(o =>
 // ===== DbContext (SQL Server) =====
 // ????? ?? ???? ConnectionStrings:SystemsLocal ?? appsettings.json
 builder.Services.AddDbContext<ApplicationDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("dbcontext")));
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ===== AutoMapper =====
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -110,8 +110,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
-
 // ===== Register Auth Services =====
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -121,10 +119,6 @@ builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IVatRateService, VatRateService>();
 builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
-
-
-
-builder.Services.AddHttpContextAccessor(); // ??? ?????? Claims ?? ??????
 
 // Common services needed by ApplicationDbContext and services:
 builder.Services.AddScoped<ICurrentUser,CurrentUserService>();
