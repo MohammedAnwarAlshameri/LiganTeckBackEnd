@@ -9,6 +9,7 @@ using Infrastructure.DbContexts;
 using Application.Common;
 using Infrastructure.Time;
 using Infrastructure.Services;
+using Application.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -120,6 +121,7 @@ builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IVatRateService, VatRateService>();
 builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<ISubscriptionService,SubscriptionService >();
 
 // Common services needed by ApplicationDbContext and services:
 builder.Services.AddScoped<ICurrentUser,CurrentUserService>();

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
-    public class TenantService: ITenantService
+    public class TenantService : ITenantService
     {
         private readonly ApplicationDbContext _db;
         public TenantService(ApplicationDbContext db) => _db = db;
@@ -23,43 +23,44 @@ namespace Infrastructure.Services
                 join s in _db.TenantStatuses.AsNoTracking() on t.TenantStatusid equals s.TenantStatusid into gs
                 from s in gs.DefaultIfEmpty()
                 where !t.IsDeleted
-                select new TenantListItemDto
-                {
-                    TenantId = t.TenantId,
-                    TenantName = t.TenantName,
-                    Username = t.Username,
-                    TenantEmail = t.TenantEmail,
-                    PhoneNumber = t.PhoneNumber,
-                    CreatedOn = t.CreatedOn,
-                    TenantStatusName = s != null ? s.TenantStatusName : ""
-                };
+                select new { t, s };
 
+            // تطبيق فلترة البحث
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var term = q.Trim();
                 query = query.Where(x =>
-                    x.TenantName.Contains(term) ||
-                    x.Username.Contains(term) ||
-                    x.TenantEmail.Contains(term) ||
-                    x.PhoneNumber.Contains(term));
+                    x.t.TenantName.Contains(term) ||
+                    x.t.Username.Contains(term) ||
+                    x.t.TenantEmail.Contains(term) ||
+                    x.t.PhoneNumber.Contains(term));
             }
 
+            // تطبيق فلترة الحالة
             if (statusId.HasValue)
             {
-                // فلترة حسب الـ id (نحتاج اسم الحالة من جدول الحالة)
-                query =
-                    from row in query
-                    join s in _db.TenantStatuses.AsNoTracking() on row.TenantStatusName equals s.TenantStatusName
-                    where s.TenantStatusid == statusId.Value
-                    select row;
+                query = query.Where(x => x.t.TenantStatusid == statusId.Value);
             }
 
+            // حساب العدد الإجمالي
             var total = await query.CountAsync(ct);
+
+            // جلب البيانات مع التقسيم
             var items = await query
-                .OrderByDescending(x => x.CreatedOn)
-                .ThenByDescending(x => x.TenantId)
+                .OrderByDescending(x => x.t.CreatedOn)
+                .ThenByDescending(x => x.t.TenantId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(x => new TenantListItemDto
+                {
+                    TenantId = x.t.TenantId,
+                    TenantName = x.t.TenantName,
+                    Username = x.t.Username,
+                    TenantEmail = x.t.TenantEmail,
+                    PhoneNumber = x.t.PhoneNumber,
+                    CreatedOn = x.t.CreatedOn,
+                    TenantStatusName = x.s != null ? x.s.TenantStatusName : ""
+                })
                 .ToListAsync(ct);
 
             return new PagedResult<TenantListItemDto>
