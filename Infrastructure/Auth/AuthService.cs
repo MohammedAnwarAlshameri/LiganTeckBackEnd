@@ -25,8 +25,12 @@ namespace Infrastructure.Auth
         public async Task<LoginResponseDto> RegisterAsync(RegisterRequestDto req, CancellationToken ct = default)
         {
             var email = req.Email.Trim().ToLowerInvariant();
+
             if (await _db.Set<Tenant>().AnyAsync(t => t.TenantEmail == email && !t.IsDeleted, ct))
                 throw new InvalidOperationException("Email already exists.");
+
+            if (await _db.Set<Tenant>().AnyAsync(t => t.Username == req.Username && !t.IsDeleted, ct))
+                throw new InvalidOperationException("Username already exists.");
 
             var hash = BCrypt.Net.BCrypt.HashPassword(req.Password);
 
@@ -37,14 +41,26 @@ namespace Infrastructure.Auth
                 TenantPassword = hash,
                 CountryCode = (req.CountryCode ?? "SA").Trim().ToUpperInvariant(),
                 TenantStatusid = 1, // Active
-                IsDeleted = false
+                IsDeleted = false,
+                Username = req.Username.Trim(),
+                PhoneNumber = req.PhoneNumber.Trim(),
+                // تحسينات إضافية:
+                TenantKey = Guid.NewGuid(),
+                CreatedOn = DateTime.UtcNow              
             };
 
             _db.Add(tenant);
             await _db.SaveChangesAsync(ct);
 
             var token = _jwt.CreateToken(tenant.TenantId, tenant.TenantEmail, tenant.TenantName);
-            return new LoginResponseDto { Token = token, TenantId = tenant.TenantId, Email = tenant.TenantEmail, TenantName = tenant.TenantName };
+
+            return new LoginResponseDto
+            {
+                Token = token,
+                TenantId = tenant.TenantId,
+                Email = tenant.TenantEmail,
+                TenantName = tenant.TenantName
+            };
         }
 
         public async Task<LoginResponseDto> LoginAsync(LoginRequestDto req, CancellationToken ct = default)

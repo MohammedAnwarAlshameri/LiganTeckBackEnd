@@ -12,6 +12,8 @@ namespace Application.DTOs
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
         public string CountryCode { get; set; } = "SA";
+        public string Username { get; set; } = null!;
+        public string PhoneNumber { get; set; } = null!;
     }
 
     public sealed class LoginRequestDto
