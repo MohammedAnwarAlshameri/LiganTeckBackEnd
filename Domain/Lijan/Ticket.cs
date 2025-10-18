@@ -9,7 +9,8 @@ public partial class Ticket
 
     public long TenantId { get; set; }
 
-    public string AttachmentPath { get; set; } = null!;
+
+    public string? AttachmentPath { get; set; } // ← اختياري
     public string SubjectLine { get; set; } = null!;
 
     public string PriorityLevel { get; set; } = null!;
