@@ -12,11 +12,10 @@ namespace Application.DTOs
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
         public string CountryCode { get; set; } = "SA";
-
-        // جديدة/اختيارية (لو تأتي من الواجهة)
         public string? Username { get; set; }
         public string? PhoneNumber { get; set; }
-       // public string? FullName { get; set; } // لو أردت استخدامه لاحقاً
+       // public string? FullName { get; set; } 
+
     }
 
     public  class LoginRequestDto
