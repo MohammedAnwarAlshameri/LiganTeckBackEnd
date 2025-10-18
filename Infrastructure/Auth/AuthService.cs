@@ -18,55 +18,55 @@ namespace Infrastructure.Auth
 
         public async Task<LoginResponseDto> RegisterAsync(RegisterRequestDto req, CancellationToken ct = default)
         {
-
             var email = (req.Email ?? "").Trim().ToLowerInvariant();
             var username = (req.Username ?? "").Trim();
             var phone = (req.PhoneNumber ?? "").Trim();
+            var tenantName = (req.TenantName ?? "").Trim();
 
-            if (string.IsNullOrWhiteSpace(email))
-                throw new InvalidOperationException("Email is required.");
-            if (string.IsNullOrWhiteSpace(req.Password))
-                throw new InvalidOperationException("Password is required.");
-            if (string.IsNullOrWhiteSpace(req.TenantName))
-                throw new InvalidOperationException("TenantName is required.");
-            if (await _db.Set<Tenant>().AnyAsync(t => t.TenantEmail == email && !t.IsDeleted, ct))
+            if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email is required.");
+            if (string.IsNullOrWhiteSpace(req.Password)) throw new ArgumentException("Password is required.");
+            if (string.IsNullOrWhiteSpace(tenantName)) throw new ArgumentException("TenantName is required.");
+            if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("UserName is required.");
+
+            // TenantName unique (case-insensitive, مع تجاهل المحذوفين)
+            if (await _db.Set<Tenant>().AnyAsync(
+                t => !t.IsDeleted && t.TenantName.ToLower() == tenantName.ToLower(), ct))
+                throw new InvalidOperationException("Tenant name already exists.");
+
+            // Email unique
+            if (await _db.Set<Tenant>().AnyAsync(
+                t => !t.IsDeleted && t.TenantEmail == email, ct))
                 throw new InvalidOperationException("Email already exists.");
 
+            // Username unique 
             if (!string.IsNullOrWhiteSpace(username))
             {
-                if (await _db.Set<Tenant>().AnyAsync(t => t.Username == username && !t.IsDeleted, ct))
+                var uname = username.ToLowerInvariant();
+                if (await _db.Set<Tenant>().AnyAsync(
+                    t => !t.IsDeleted && t.Username.ToLower() == uname, ct))
                     throw new InvalidOperationException("Username already exists.");
             }
 
-            if (!string.IsNullOrWhiteSpace(phone))
-            {
-                if (await _db.Set<Tenant>().AnyAsync(t => t.PhoneNumber == phone && !t.IsDeleted, ct))
-                    throw new InvalidOperationException("Phone number already exists.");
-            }
-
+            // يُسمح بالتكرار
             var hash = BCrypt.Net.BCrypt.HashPassword(req.Password);
 
             var tenant = new Tenant
             {
-                TenantName = req.TenantName.Trim(),
+                TenantName = tenantName,
                 TenantEmail = email,
                 TenantPassword = hash,
                 CountryCode = (req.CountryCode ?? "SA").Trim().ToUpperInvariant(),
                 Username = string.IsNullOrWhiteSpace(username) ? email : username,
                 PhoneNumber = phone,
-                TenantStatusid = 1, // Active
+                TenantStatusid = 1,
                 IsDeleted = false,
-                CreatedOn = DateTime.UtcNo
+                CreatedOn = DateTime.UtcNow
             };
 
             _db.Add(tenant);
             await _db.SaveChangesAsync(ct);
-            var token = _jwt.CreateToken(
-                tenantId: tenant.TenantId,
-                email: tenant.TenantEmail,
-                tenantName: tenant.TenantName
-            );
 
+            var token = _jwt.CreateToken(tenant.TenantId, tenant.TenantEmail, tenant.TenantName);
             return new LoginResponseDto
             {
                 Token = token,
