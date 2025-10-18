@@ -8,7 +8,7 @@ namespace LijanTeck.Controllers
 {
     [ApiController]
     [Route("api/plans")]
-    [Authorize]
+   // [Authorize]
     public class PlansController : ControllerBase
     {
         private readonly ApplicationDbContext _db;

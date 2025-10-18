@@ -7,7 +7,7 @@ namespace LijanTeck.Controllers
 {
     [ApiController]
     [Route("api/admin/tenants")]
-    //[Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = "AdminOnly")]
     public class TenantController : Controller
     {
         private readonly ITenantService _svc;
