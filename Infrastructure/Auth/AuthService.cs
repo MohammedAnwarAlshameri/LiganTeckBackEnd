@@ -2,13 +2,7 @@
 using Application.IServices;
 using Domain.Lijan;
 using Infrastructure.DbContexts;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Auth
 {
@@ -24,13 +18,31 @@ namespace Infrastructure.Auth
 
         public async Task<LoginResponseDto> RegisterAsync(RegisterRequestDto req, CancellationToken ct = default)
         {
-            var email = req.Email.Trim().ToLowerInvariant();
 
+            var email = (req.Email ?? "").Trim().ToLowerInvariant();
+            var username = (req.Username ?? "").Trim();
+            var phone = (req.PhoneNumber ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(email))
+                throw new InvalidOperationException("Email is required.");
+            if (string.IsNullOrWhiteSpace(req.Password))
+                throw new InvalidOperationException("Password is required.");
+            if (string.IsNullOrWhiteSpace(req.TenantName))
+                throw new InvalidOperationException("TenantName is required.");
             if (await _db.Set<Tenant>().AnyAsync(t => t.TenantEmail == email && !t.IsDeleted, ct))
                 throw new InvalidOperationException("Email already exists.");
 
-            if (await _db.Set<Tenant>().AnyAsync(t => t.Username == req.Username && !t.IsDeleted, ct))
-                throw new InvalidOperationException("Username already exists.");
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                if (await _db.Set<Tenant>().AnyAsync(t => t.Username == username && !t.IsDeleted, ct))
+                    throw new InvalidOperationException("Username already exists.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(phone))
+            {
+                if (await _db.Set<Tenant>().AnyAsync(t => t.PhoneNumber == phone && !t.IsDeleted, ct))
+                    throw new InvalidOperationException("Phone number already exists.");
+            }
 
             var hash = BCrypt.Net.BCrypt.HashPassword(req.Password);
 
@@ -40,19 +52,20 @@ namespace Infrastructure.Auth
                 TenantEmail = email,
                 TenantPassword = hash,
                 CountryCode = (req.CountryCode ?? "SA").Trim().ToUpperInvariant(),
+                Username = string.IsNullOrWhiteSpace(username) ? email : username,
+                PhoneNumber = phone,
                 TenantStatusid = 1, // Active
                 IsDeleted = false,
-                Username = req.Username.Trim(),
-                PhoneNumber = req.PhoneNumber.Trim(),
-                // تحسينات إضافية:
-                TenantKey = Guid.NewGuid(),
-                CreatedOn = DateTime.UtcNow              
+                CreatedOn = DateTime.UtcNo
             };
 
             _db.Add(tenant);
             await _db.SaveChangesAsync(ct);
-
-            var token = _jwt.CreateToken(tenant.TenantId, tenant.TenantEmail, tenant.TenantName);
+            var token = _jwt.CreateToken(
+                tenantId: tenant.TenantId,
+                email: tenant.TenantEmail,
+                tenantName: tenant.TenantName
+            );
 
             return new LoginResponseDto
             {
@@ -65,12 +78,20 @@ namespace Infrastructure.Auth
 
         public async Task<LoginResponseDto> LoginAsync(LoginRequestDto req, CancellationToken ct = default)
         {
-            var email = (req.Email ?? string.Empty).Trim().ToLowerInvariant();
+            var input = (req.Email ?? "").Trim();
+            var pwd = req.Password ?? "";
 
-            // نقرأ فقط الأعمدة اللازمة لتسجيل الدخول
+            if (string.IsNullOrWhiteSpace(input) || string.IsNullOrWhiteSpace(pwd))
+                throw new InvalidOperationException("Invalid credentials.");
+
+            var email = input.ToLowerInvariant();
+            var username = input;
+            var phone = input;
+
             var row = await _db.Set<Tenant>()
                 .AsNoTracking()
-                .Where(t => t.TenantEmail == email && !t.IsDeleted)
+                .Where(t => !t.IsDeleted &&
+                           (t.TenantEmail == email || t.Username == username || t.PhoneNumber == phone))
                 .Select(t => new
                 {
                     t.TenantId,
@@ -81,21 +102,17 @@ namespace Infrastructure.Auth
                 })
                 .SingleOrDefaultAsync(ct);
 
-            // إخفاء تفاصيل السبب لأمان أعلى
             if (row is null || string.IsNullOrEmpty(row.PasswordHash))
                 throw new InvalidOperationException("Invalid credentials.");
-
-            // لو عندك حالة للحساب (مثلاً 1 = Active)
             if (row.Status != 1)
                 throw new InvalidOperationException("Account is inactive.");
-
-            if (!BCrypt.Net.BCrypt.Verify(req.Password ?? string.Empty, row.PasswordHash))
+            if (!BCrypt.Net.BCrypt.Verify(pwd, row.PasswordHash))
                 throw new InvalidOperationException("Invalid credentials.");
 
             var token = _jwt.CreateToken(
-                row.TenantId,
-                row.Email ?? string.Empty,
-                row.Name ?? string.Empty
+                tenantId: row.TenantId,
+                email: row.Email ?? string.Empty,
+                tenantName: row.Name ?? string.Empty
             );
 
             return new LoginResponseDto
@@ -106,6 +123,5 @@ namespace Infrastructure.Auth
                 TenantName = row.Name ?? string.Empty
             };
         }
-
     }
 }

@@ -12,17 +12,20 @@ namespace Application.DTOs
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
         public string CountryCode { get; set; } = "SA";
-        public string Username { get; set; } = null!;
-        public string PhoneNumber { get; set; } = null!;
+        public string? Username { get; set; }
+        public string? PhoneNumber { get; set; }
+       // public string? FullName { get; set; } 
+
     }
 
-    public sealed class LoginRequestDto
+    public  class LoginRequestDto
     {
+        // يمكن أن يكون Email أو Username أو Phone
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
     }
 
-    public sealed class LoginResponseDto
+    public class LoginResponseDto
     {
         public string Token { get; init; } = null!;
         public long TenantId { get; init; }

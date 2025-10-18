@@ -14,10 +14,8 @@ namespace Infrastructure.EntityConfigurations.Lijan
     {
         public void Configure(EntityTypeBuilder<TicketStatus> entity)
         {
-            entity
-                .HasNoKey()
-                .ToTable("TicketStatus");
-
+            entity .ToTable("TicketStatus");
+            entity.HasKey(e => e.TicketStatusid);
             entity.Property(e => e.TicketStatusName).HasMaxLength(50);
             entity.Property(e => e.TicketStatusdescription).HasMaxLength(200);
             entity.Property(e => e.TicketStatusid).ValueGeneratedOnAdd();
