@@ -30,5 +30,23 @@ namespace Application.DTOs
         public string? CouponCode { get; set; }
 
     }
-    
+    public sealed class SubscriptionListItemDto
+    {
+        public long SubscriptionId { get; set; }
+        public long TenantId { get; set; }
+        public string TenantName { get; set; } = "";
+        public string TenantEmail { get; set; } = "";
+        public long PlanId { get; set; }
+        public string PlanNameAr { get; set; } = "";
+        public string PlanNameEn { get; set; } = "";
+
+        public int MonthsCount { get; set; }
+        public bool AutoRenew { get; set; }
+        public int SubStatusid { get; set; }
+        public DateTime StartDateUtc { get; set; }
+        public DateTime? EndDateUtc { get; set; }
+        public DateTime? NextBillingUtc { get; set; }
+        public long? CouponId { get; set; }
+    }
+
 }
