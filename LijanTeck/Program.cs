@@ -105,7 +105,7 @@ builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ICurrentUser, CurrentUserService>();
 builder.Services.AddScoped<IDateTimeProvider, DateTimeProvider>();
-
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

@@ -7,7 +7,7 @@ namespace LijanTeck.Controllers
 {
     [ApiController]
     [Route("api/admin/plans")]
-    [Authorize(Policy = "AdminOnly")]
+   // [Authorize(Policy = "AdminOnly")]
     public class PlansAdminController : Controller
     {
         private readonly IPlanService _svc;

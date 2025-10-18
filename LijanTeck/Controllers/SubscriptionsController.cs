@@ -10,7 +10,7 @@ namespace LijanTeck.Controllers
 {
     [ApiController]
     [Route("api/subscriptions")]
-    //[Authorize]
+    [Authorize]
     public class SubscriptionsController : ControllerBase
     {
         private readonly ISubscriptionService _service;
@@ -56,5 +56,28 @@ namespace LijanTeck.Controllers
 
             return Ok(list);
         }
+        // ====== إدارة ======
+        [HttpGet("admin/search")]
+      //  [Authorize(Policy = "AdminsOnly")]
+        public async Task<ActionResult<PagedResult<SubscriptionListItemDto>>> AdminSearch(
+            [FromQuery] long? tenantId,
+            [FromQuery] long? planId,
+            [FromQuery] int? statusId,
+            [FromQuery] DateTime? fromUtc,
+            [FromQuery] DateTime? toUtc,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20,
+            CancellationToken ct = default)
+        {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 200);
+            var res = await _service.AdminSearchAsync(tenantId, planId, statusId, fromUtc, toUtc, page, pageSize, ct);
+            return Ok(res);
+        }
+
+        [HttpGet("admin/all")]
+       // [Authorize(Policy = "AdminsOnly")]
+        public async Task<ActionResult<PagedResult<SubscriptionListItemDto>>> AdminAll(CancellationToken ct)
+            => Ok(await _service.AdminSearchAsync(null, null, null, null, null, 1, 50, ct));
     }
 }

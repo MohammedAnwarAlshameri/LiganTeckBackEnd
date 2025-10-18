@@ -10,7 +10,7 @@ namespace LijanTeck.Controllers
 {
     [ApiController]
     [Route("api/tickets")]
-    // [Authorize]
+     [Authorize]
     public class TicketsController : ControllerBase
     {
         private readonly ITicketService _svc;
@@ -70,7 +70,7 @@ namespace LijanTeck.Controllers
 
         // المحادثة الجديدة الموحدة (عميل/إدارة)
         [HttpPost("{ticketId:long}/chat")]
-      //  [Authorize] // يمكن تخصيصها CustomerOnly/AdminsOnly حسب الحاجة
+        [Authorize] // يمكن تخصيصها CustomerOnly/AdminsOnly حسب الحاجة
         public async Task<IActionResult> AddChat(long ticketId, [FromBody] AddChatRequest request, CancellationToken ct)
         {
             var ok = await _svc.AddChatAsync(ticketId, request.TenantId, request.Message, request.IsAdmin, ct);
@@ -116,7 +116,7 @@ namespace LijanTeck.Controllers
 
         // تحديث الحالة
         [HttpPut("{id:long}/status")]
-       // [Authorize(Policy = "AdminsOnly")]
+       [Authorize(Policy = "AdminsOnly")]
         public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateStatusRequest request, CancellationToken ct)
         {
             var ok = await _svc.UpdateStatusAsync(id, request.StatusId, ct);
@@ -125,7 +125,7 @@ namespace LijanTeck.Controllers
 
         // تحديث الأولوية
         [HttpPut("{id:long}/priority")]
-       // [Authorize(Policy = "AdminsOnly")]
+        [Authorize(Policy = "AdminsOnly")]
         public async Task<IActionResult> UpdatePriority(long id, [FromBody] UpdatePriorityRequest request, CancellationToken ct)
         {
             var ok = await _svc.UpdatePriorityAsync(id, request.Priority, ct);
@@ -134,7 +134,7 @@ namespace LijanTeck.Controllers
 
         // عمليات جماعية
         [HttpPut("bulk/status")]
-      //  [Authorize(Policy = "AdminsOnly")]
+        [Authorize(Policy = "AdminsOnly")]
         public async Task<IActionResult> BulkUpdateStatus([FromBody] BulkUpdateStatusRequest request, CancellationToken ct)
         {
             var ok = await _svc.BulkUpdateStatusAsync(request.TicketIds, request.StatusId, ct);
