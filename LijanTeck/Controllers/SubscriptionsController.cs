@@ -10,7 +10,7 @@ namespace LijanTeck.Controllers
 {
     [ApiController]
     [Route("api/subscriptions")]
-    [Authorize]
+    //[Authorize]
     public class SubscriptionsController : ControllerBase
     {
         private readonly ISubscriptionService _service;

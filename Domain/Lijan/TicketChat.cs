@@ -7,6 +7,7 @@ public partial class TicketChat
 {
     public long ChatId { get; set; }
 
+    public long TicketId { get; set; }
     public long TenantId { get; set; }
 
     public string TenantText { get; set; } = null!;

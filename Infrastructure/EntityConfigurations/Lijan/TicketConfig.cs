@@ -15,6 +15,7 @@ namespace Infrastructure.EntityConfigurations.Lijan
         public void Configure(EntityTypeBuilder<Ticket> entity)
         {
             entity.ToTable("Ticket");
+            entity.HasKey(e => e.TicketId);
 
             entity.Property(e => e.CreatedOn)
                 .HasDefaultValueSql("(sysutcdatetime())")

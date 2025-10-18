@@ -2,42 +2,48 @@
 using Application.IServices;
 using Infrastructure.DbContexts;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
-    public class AdminUserService: IAdminUserService
+    public class AdminUserService : IAdminUserService
     {
         private readonly ApplicationDbContext _db;
         private readonly IJwtTokenService _jwt;
 
         public AdminUserService(ApplicationDbContext db, IJwtTokenService jwt)
-        { _db = db; _jwt = jwt; }
+        {
+            _db = db; _jwt = jwt;
+        }
 
         public async Task<LoginResponseDto> LoginAsync(AdminLoginRequest req, CancellationToken ct = default)
         {
-            var email = req.Email.Trim().ToLowerInvariant();
-            var u = await _db.AdminUser
-                    .FirstOrDefaultAsync(x => x.Email == email && x.IsActive && !x.IsDeleted, ct)
-                    ?? throw new InvalidOperationException("Invalid credentials.");
+            var email = (req.Email ?? "").Trim().ToLowerInvariant();
+            var user = await _db.AdminUser
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Email == email && x.IsActive && !x.IsDeleted, ct)
+                ?? throw new InvalidOperationException("Invalid credentials.");
 
-            if (!BCrypt.Net.BCrypt.Verify(req.Password, u.PasswordHash))
+            if (!BCrypt.Net.BCrypt.Verify(req.Password ?? "", user.PasswordHash))
                 throw new InvalidOperationException("Invalid credentials.");
 
-            // لاحظ أننا نمرر الدور من قاعدة البيانات
+            // الدور ثابت: Admin (بدون Staff/Support/Finance)
             var token = _jwt.CreateToken(
-                userId: u.AdminUserId,
-                email: u.Email,
-                role: u.RoleName,        // Admin | Support | Finance
-                name: u.DisplayName ?? u.Email,
-                extraClaims: new Dictionary<string, string> { ["user_type"] = "staff" }
-            );
+                userId: user.AdminUserId,
+                email: user.Email,
+                role: "Admin",
+                name: user.DisplayName ?? user.Email,
+                extraClaims: new Dictionary<string, string>
+                {
+                    ["user_type"] = "Admin"
+                });
 
-            return new LoginResponseDto { Token = token, TenantId = 0, Email = u.Email, TenantName = u.DisplayName ?? u.Email };
+            return new LoginResponseDto
+            {
+                Token = token,
+                TenantId = 0,
+                Email = user.Email,
+                TenantName = user.DisplayName ?? user.Email
+            };
         }
     }
 }
